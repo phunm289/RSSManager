@@ -1,0 +1,1141 @@
+/*
+ * To change this template, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package rssmanager;
+
+import java.awt.AWTException;
+import java.awt.BorderLayout;
+import java.awt.Color;
+import java.awt.Cursor;
+import java.awt.Desktop;
+import java.awt.Dimension;
+import static java.awt.Frame.ICONIFIED;
+import java.awt.HeadlessException;
+import java.awt.Point;
+import java.awt.SystemTray;
+import java.awt.Toolkit;
+import java.awt.TrayIcon;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowStateListener;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.DefaultListModel;
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
+import javax.swing.JFileChooser;
+import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+import org.mozilla.browser.IMozillaWindow;
+import org.mozilla.browser.MozillaPanel;
+
+/**
+ *
+ * @author Wise-SW
+ */
+public class RSSManager extends javax.swing.JFrame {
+    private RSS rss;
+    private DefaultListModel model;
+    private Vector<RSS> rssCollection;
+    private SystemTray tray;
+    private TrayIcon trayIcon;
+    private boolean isNew;
+    private Thread thread;
+    private Connection conn;
+    private Statement stmt;
+    private ResultSet rs;
+    private MozillaPanel pn;
+//    private PanelBrowser panelBrowser;
+    private JMenuItem itemMarkUnread;
+
+    public File getIconFile() {
+        return iconFile;
+    }
+
+    public void setIconFile(File iconFile) {
+        this.iconFile = iconFile;
+    }
+    private File iconFile = new File("rss_feed.png");
+    private Vector<RSSItem> feedNews = new Vector<>();
+    private boolean loop = false;
+
+    public boolean isTimer() {
+        return loop;
+    }
+
+    public void setTimer(boolean timer) {
+        this.loop = timer;
+    }
+    public RSS getRss() {
+        return rss;
+    }
+
+    public boolean isIsNew() {
+        return isNew;
+    }
+
+    public void setIsNew(boolean isNew) {
+        this.isNew = isNew;
+    }
+
+    public Vector<RSS> getRssCollection() {
+        return rssCollection;
+    }
+
+    public void setRssCollection(Vector<RSS> rssCollection) {
+        this.rssCollection = rssCollection;
+    }
+    private int readStt = 0;
+
+    public void setRss(RSS rss) {
+        this.rss = rss;
+    }
+
+    public TrayIcon getTrayIcon() {
+        return trayIcon;
+    }
+
+    public void setTrayIcon(TrayIcon trayIcon) {
+        this.trayIcon = trayIcon;
+    }
+    
+    
+    /**
+     * Creates new form RSSManager
+     */
+    public RSSManager() {
+        try {
+            Class.forName("org.sqlite.JDBC");
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException | UnsupportedLookAndFeelException ex) {
+            System.out.println(ex.getMessage());
+        }
+        initComponents();
+        
+        rssCollection = new Vector<>();
+        File file = new File("RSSManager.db");
+        if(!file.isFile()){
+            Database db = new Database();
+            db.createDatabase();
+        }
+        formLoad(true);
+        for (int i = 0; i < rssCollection.size(); i++) {
+            updateRssFeed(i);
+        }
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        setLocation((screenSize.width-this.getWidth())/3, (screenSize.height-this.getHeight())/3);
+        creatTrayIcon();
+        
+        
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        popupList = new javax.swing.JPopupMenu();
+        miAdd = new javax.swing.JMenuItem();
+        miRemove = new javax.swing.JMenuItem();
+        miUpdate = new javax.swing.JMenuItem();
+        miImport = new javax.swing.JMenuItem();
+        miExport = new javax.swing.JMenuItem();
+        toolBar = new javax.swing.JToolBar();
+        btnAdd = new javax.swing.JButton();
+        btnRemove = new javax.swing.JButton();
+        btnUpdate = new javax.swing.JButton();
+        btnImport = new javax.swing.JButton();
+        btnExport = new javax.swing.JButton();
+        jLabel1 = new javax.swing.JLabel();
+        cbbShowFeedType = new javax.swing.JComboBox();
+        pnContent = new javax.swing.JPanel();
+        jSplitPane1 = new javax.swing.JSplitPane();
+        pnList = new javax.swing.JPanel();
+        jScrollPane1 = new javax.swing.JScrollPane();
+        rssList = new javax.swing.JList(){
+            @Override
+            public JPopupMenu getComponentPopupMenu() {
+                Point p = getMousePosition();
+                int index = locationToIndex(p);
+                if(p != null && index >= 0){
+                    if (rssList.getSelectedIndex() == index ) {
+
+                    } else {
+                        this.setSelectedIndex(index);
+                    }
+                    return super.getComponentPopupMenu();
+                }else return null;
+            }
+        };
+        pnResult = new javax.swing.JPanel();
+        jSplitPane2 = new javax.swing.JSplitPane();
+        tabbedPane = new javax.swing.JTabbedPane();
+        pnPreview = new JPanel();
+
+        miAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/add.png"))); // NOI18N
+        miAdd.setText("Add");
+        miAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miAddActionPerformed(evt);
+            }
+        });
+        popupList.add(miAdd);
+
+        miRemove.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/remove.png"))); // NOI18N
+        miRemove.setText("Remove");
+        miRemove.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miRemoveActionPerformed(evt);
+            }
+        });
+        popupList.add(miRemove);
+
+        miUpdate.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/update.png"))); // NOI18N
+        miUpdate.setText("Update now!");
+        miUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miUpdateActionPerformed(evt);
+            }
+        });
+        popupList.add(miUpdate);
+
+        miImport.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/import.png"))); // NOI18N
+        miImport.setText("Import");
+        miImport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                miImportActionPerformed(evt);
+            }
+        });
+        popupList.add(miImport);
+
+        miExport.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/export.png"))); // NOI18N
+        miExport.setText("Export");
+        miExport.setEnabled(false);
+        popupList.add(miExport);
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setTitle("RSS Feed Manager");
+        setMinimumSize(new java.awt.Dimension(1280, 720));
+        setPreferredSize(new java.awt.Dimension(1280, 720));
+
+        toolBar.setRollover(true);
+
+        btnAdd.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/add.png"))); // NOI18N
+        btnAdd.setText("Add");
+        btnAdd.setToolTipText("Add RSS Feed");
+        btnAdd.setFocusable(false);
+        btnAdd.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnAdd.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnAdd.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAddActionPerformed(evt);
+            }
+        });
+        toolBar.add(btnAdd);
+
+        btnRemove.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/remove.png"))); // NOI18N
+        btnRemove.setText("Remove");
+        btnRemove.setToolTipText("Remove");
+        btnRemove.setEnabled(false);
+        btnRemove.setFocusable(false);
+        btnRemove.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnRemove.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnRemove.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnRemoveActionPerformed(evt);
+            }
+        });
+        toolBar.add(btnRemove);
+
+        btnUpdate.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/update.png"))); // NOI18N
+        btnUpdate.setText("Update");
+        btnUpdate.setToolTipText("Update now");
+        btnUpdate.setEnabled(false);
+        btnUpdate.setFocusable(false);
+        btnUpdate.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnUpdate.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnUpdate.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateActionPerformed(evt);
+            }
+        });
+        toolBar.add(btnUpdate);
+
+        btnImport.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/import.png"))); // NOI18N
+        btnImport.setText("Import");
+        btnImport.setFocusable(false);
+        btnImport.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnImport.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnImport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnImportActionPerformed(evt);
+            }
+        });
+        toolBar.add(btnImport);
+
+        btnExport.setIcon(new javax.swing.ImageIcon(getClass().getResource("/icon/export.png"))); // NOI18N
+        btnExport.setText("Export");
+        btnExport.setEnabled(false);
+        btnExport.setFocusable(false);
+        btnExport.setHorizontalTextPosition(javax.swing.SwingConstants.RIGHT);
+        btnExport.setVerticalTextPosition(javax.swing.SwingConstants.BOTTOM);
+        btnExport.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnExportActionPerformed(evt);
+            }
+        });
+        toolBar.add(btnExport);
+
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
+        jLabel1.setText("Show: ");
+        jLabel1.setHorizontalTextPosition(javax.swing.SwingConstants.LEADING);
+        jLabel1.setMaximumSize(new java.awt.Dimension(50, 14));
+        jLabel1.setMinimumSize(new java.awt.Dimension(60, 14));
+        jLabel1.setPreferredSize(new java.awt.Dimension(60, 14));
+        toolBar.add(jLabel1);
+
+        cbbShowFeedType.setModel(new javax.swing.DefaultComboBoxModel(new String[] { "Unread", "Read" }));
+        cbbShowFeedType.setFocusable(false);
+        cbbShowFeedType.setMaximumSize(new java.awt.Dimension(60, 20));
+        cbbShowFeedType.setName(""); // NOI18N
+        cbbShowFeedType.setRequestFocusEnabled(false);
+        cbbShowFeedType.setVerifyInputWhenFocusTarget(false);
+        cbbShowFeedType.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cbbShowFeedTypeActionPerformed(evt);
+            }
+        });
+        toolBar.add(cbbShowFeedType);
+
+        getContentPane().add(toolBar, java.awt.BorderLayout.PAGE_START);
+
+        pnContent.setLayout(new java.awt.BorderLayout());
+
+        jSplitPane1.setBackground(new java.awt.Color(255, 255, 255));
+        jSplitPane1.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 1, 1, 1));
+        jSplitPane1.setDividerLocation(250);
+        jSplitPane1.setContinuousLayout(true);
+
+        pnList.setBackground(new java.awt.Color(255, 255, 255));
+        pnList.setMinimumSize(new java.awt.Dimension(100, 100));
+        pnList.setLayout(new java.awt.BorderLayout());
+
+        rssList.setComponentPopupMenu(popupList);
+        rssList.setDragEnabled(true);
+        rssList.setSelectionBackground(new java.awt.Color(200, 200, 200));
+        rssList.setSelectionForeground(new java.awt.Color(0, 0, 0));
+        rssList.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                rssListMouseClicked(evt);
+            }
+        });
+        jScrollPane1.setViewportView(rssList);
+
+        pnList.add(jScrollPane1, java.awt.BorderLayout.CENTER);
+
+        jSplitPane1.setLeftComponent(pnList);
+
+        pnResult.setBackground(new java.awt.Color(255, 255, 255));
+        pnResult.setOpaque(false);
+        pnResult.setLayout(new java.awt.BorderLayout());
+
+        jSplitPane2.setDividerLocation(300);
+        jSplitPane2.setOrientation(javax.swing.JSplitPane.VERTICAL_SPLIT);
+        jSplitPane2.setResizeWeight(0.6);
+        jSplitPane2.setContinuousLayout(true);
+
+        tabbedPane.setBackground(new java.awt.Color(255, 255, 255));
+        tabbedPane.setMinimumSize(new java.awt.Dimension(100, 100));
+        tabbedPane.setPreferredSize(new java.awt.Dimension(100, 100));
+        tabbedPane.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                tabbedPaneMouseClicked(evt);
+            }
+        });
+        jSplitPane2.setTopComponent(tabbedPane);
+
+        pnPreview.setBackground(new java.awt.Color(255, 255, 255));
+        pnPreview.setMinimumSize(new java.awt.Dimension(100, 100));
+        pnPreview.setPreferredSize(new java.awt.Dimension(100, 100));
+        pnPreview.setLayout(new java.awt.BorderLayout());
+        jSplitPane2.setBottomComponent(pnPreview);
+
+        pnResult.add(jSplitPane2, java.awt.BorderLayout.CENTER);
+
+        jSplitPane1.setRightComponent(pnResult);
+
+        pnContent.add(jSplitPane1, java.awt.BorderLayout.CENTER);
+        jSplitPane1.getAccessibleContext().setAccessibleParent(pnContent);
+
+        getContentPane().add(pnContent, java.awt.BorderLayout.CENTER);
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void btnAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAddActionPerformed
+        doAddAction();
+    }//GEN-LAST:event_btnAddActionPerformed
+    private void setBtnRemoveAndUpdate(boolean value){
+        btnRemove.setEnabled(value);
+        btnUpdate.setEnabled(value);
+    }
+    private void tabbedPaneMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_tabbedPaneMouseClicked
+        // TODO add your handling code here:
+        if(SwingUtilities.isMiddleMouseButton(evt)){
+            tabbedPane.remove(tabbedPane.getSelectedIndex());
+        }
+    }//GEN-LAST:event_tabbedPaneMouseClicked
+
+    private void miAddActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miAddActionPerformed
+        doAddAction();
+    }//GEN-LAST:event_miAddActionPerformed
+
+    private void btnRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnRemoveActionPerformed
+        // TODO add your handling code here:
+        doRemove();
+    }//GEN-LAST:event_btnRemoveActionPerformed
+
+    private void miRemoveActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miRemoveActionPerformed
+        // TODO add your handling code here:
+        doRemove();
+    }//GEN-LAST:event_miRemoveActionPerformed
+
+    private void btnUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateActionPerformed
+        int index = rssList.getSelectedIndex();
+        if(index >= 0)updateRssFeed(index);
+    }//GEN-LAST:event_btnUpdateActionPerformed
+
+    private void miUpdateActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miUpdateActionPerformed
+        int index = rssList.getSelectedIndex();
+        if(index >= 0)updateRssFeed(index);
+    }//GEN-LAST:event_miUpdateActionPerformed
+
+    private void rssListMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_rssListMouseClicked
+        // TODO add your handling code here:
+        if(SwingUtilities.isLeftMouseButton(evt)){
+            int index = rssList.locationToIndex(evt.getPoint());
+            if (evt.getClickCount() == 1 && index >= 0) {
+                rssList.setSelectedIndex(index);
+                setBtnRemoveAndUpdate(true);
+                RSS rssSelected = rssCollection.get(rssList.getSelectedIndex());
+                boolean existed = false;
+                if (tabbedPane.getTabCount() > 0) {
+                    for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+                        if (rssSelected.getNewsLink().equals(tabbedPane.getToolTipTextAt(i))) {
+                            existed = true;
+                            tabbedPane.setSelectedIndex(i);
+                            break;
+                        }
+                    }
+                }
+
+                if (!existed) {
+                    loadTab(rssSelected);
+                }
+            }
+        }
+    }//GEN-LAST:event_rssListMouseClicked
+
+    private void cbbShowFeedTypeActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cbbShowFeedTypeActionPerformed
+        // TODO add your handling code here:
+        if(cbbShowFeedType.getSelectedIndex() == 1){
+            readStt = 1;
+            itemMarkUnread.setText("Mark read");
+        }else {
+            readStt = 0;
+            itemMarkUnread.setText("Mark unread");
+        }
+        formLoad(false);
+        if(tabbedPane.getTabCount() > 0){
+            tabbedPane.removeAll();
+        }
+    }//GEN-LAST:event_cbbShowFeedTypeActionPerformed
+
+    private void btnImportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnImportActionPerformed
+        try {
+            // TODO add your handling code here:
+            importFromOpml();
+        } catch (SQLException ex) {
+            Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_btnImportActionPerformed
+
+    private void miImportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_miImportActionPerformed
+        try {
+            // TODO add your handling code here:
+            importFromOpml();
+        } catch (SQLException ex) {
+            Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_miImportActionPerformed
+
+    private void btnExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnExportActionPerformed
+        // TODO add your handling code here:
+        exportToOpmlFile();
+    }//GEN-LAST:event_btnExportActionPerformed
+
+    /**
+     * @param args the command line arguments
+     */
+    public static void main(String args[]) {
+        
+        java.awt.EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                final RSSManager rssm = new RSSManager();
+                
+                rssm.setVisible(true);
+                Timer timer = new Timer();
+                TimerTask task = new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (rssm.getRssCollection().size() > 0) {
+                            for (int i = 0; i < rssm.getRssCollection().size(); i++) {
+                                rssm.updateRssFeed(i);
+                            }
+                            if (rssm.isIsNew()) {
+                                rssm.setTimer(true);
+                                final ShowNewFeed dialog = new ShowNewFeed(rssm.feedNews);
+                                Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                                dialog.setSize(500, 150);
+                                dialog.setLocation((screenSize.width-500)/2, (screenSize.height-150)/3);
+                                dialog.setVisible(true);
+                                rssm.model = new DefaultListModel();
+                                for (int i = 0; i < rssm.getRssCollection().size(); i++) {
+                                    rssm.model.addElement("<html><img src=\"file:///" + rssm.getIconFile().getAbsolutePath() + "\"><b>&nbsp&nbsp&nbsp&nbsp " + rssm.getRssCollection().get(i).getTitle() + " ("+rssm.getRssCollection().get(i).getItemCount()+")</b></html>");
+                                }
+                                rssm.rssList.setModel(rssm.model);
+                                rssm.tabbedPane.removeAll();
+                                rssm.setIsNew(false);
+                            }
+                        }
+                    }
+                };
+                timer.schedule(task, 10*60*1000, 10*60*1000);
+                        
+            }
+        });
+        
+    }
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnAdd;
+    private javax.swing.JButton btnExport;
+    private javax.swing.JButton btnImport;
+    private javax.swing.JButton btnRemove;
+    private javax.swing.JButton btnUpdate;
+    private javax.swing.JComboBox cbbShowFeedType;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JSplitPane jSplitPane1;
+    private javax.swing.JSplitPane jSplitPane2;
+    private javax.swing.JMenuItem miAdd;
+    private javax.swing.JMenuItem miExport;
+    private javax.swing.JMenuItem miImport;
+    private javax.swing.JMenuItem miRemove;
+    private javax.swing.JMenuItem miUpdate;
+    private javax.swing.JPanel pnContent;
+    private javax.swing.JPanel pnList;
+    private javax.swing.JPanel pnPreview;
+    private javax.swing.JPanel pnResult;
+    private javax.swing.JPopupMenu popupList;
+    private javax.swing.JList rssList;
+    private javax.swing.JTabbedPane tabbedPane;
+    private javax.swing.JToolBar toolBar;
+    // End of variables declaration//GEN-END:variables
+
+    private void doRemove() {
+        int index = rssList.getSelectedIndex();
+        if(index >= 0) {
+            try {
+                RSS rssSelected = rssCollection.get(index);
+                conn = DriverManager.getConnection("jdbc:sqlite:RSSManager.db");
+                stmt = conn.createStatement();
+                stmt.execute("DELETE FROM RSSItem WHERE rssID = '"+rssSelected.getId()+"'");
+                stmt.execute("DELETE FROM RSS WHERE id = '"+rssSelected.getId()+"'");
+                rssCollection.remove(index);
+                
+                if(tabbedPane.getTabCount() > 0)
+                for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+                    if (rssSelected.getNewsLink().equals(tabbedPane.getToolTipTextAt(i))) {
+                        tabbedPane.remove(i);
+                        break;
+                    }
+                }
+                formLoad(false);
+            } catch (SQLException ex) {
+                Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        if(model.getSize() <= 0){
+            btnExport.setEnabled(false);
+            miExport.setEnabled(false);
+        }
+    }
+
+    public void doAddAction() throws HeadlessException {
+        // TODO add your handling code here:
+        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+        NewFeedDialog dialog = new NewFeedDialog(this, true);
+        dialog.setLocation((screenSize.width-dialog.getWidth())/3, (screenSize.height-dialog.getHeight())/3);
+        dialog.setVisible(true);
+        int rssID = dialog.getReturn_status();
+        
+        if(rssID >= 0){
+            try {
+                conn = DriverManager.getConnection("jdbc:sqlite:RSSManager.db");
+                stmt = conn.createStatement();
+                rs = stmt.executeQuery("SELECT * FROM RSS WHERE id = '"+rssID+"'");
+                RSS rssFeed = new RSS();
+                if(rs.next()){
+                    rssFeed.setId(rssID);
+                    rssFeed.setTitle(rs.getString("title"));
+                    rssFeed.setNewsLink(rs.getString("link"));
+                    rssFeed.setRssLink(rs.getString("rssLink"));
+                    rs = stmt.executeQuery("SELECT count(*) FROM RSSItem WHERE rssID = '"+rssID+"' AND isRead = 0");
+                    if(rs.next()){
+                        rssFeed.setItemCount(rs.getInt("count(*)"));
+                    }
+                }
+                rssCollection.add(rssFeed);
+                model.addElement("<html><img src=\"file:///" + iconFile.getAbsolutePath() + "\"><b>&nbsp&nbsp&nbsp&nbsp " + rssFeed.getTitle() + "("+rssFeed.getItemCount()+")"+"</b></html>");
+                rssList.setModel(model);
+                setBtnRemoveAndUpdate(false);
+                btnExport.setEnabled(true);
+                miExport.setEnabled(true);
+            } catch (SQLException ex) {
+                System.out.println(ex.getMessage());
+            } finally{
+                try {
+                    conn.close();
+                } catch (SQLException ex) {
+                    Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+            
+        }else{
+            
+        }
+    }
+
+    private boolean updateRssFeed(final int index) {
+        thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                RSS rssSelected = rssCollection.get(index);
+                String rssURl = rssSelected.getRssLink();
+                RSSUpdater updater = new RSSUpdater(rssURl);
+                int sign = updater.Updater();
+                for (RSSItem rSSItem : updater.getFeedNews()) {
+                    feedNews.add(rSSItem);
+                }
+                
+                if(sign > 0){
+                    formLoad(false);
+                    isNew = true;
+                }
+            }
+        });
+        thread.start();
+        return isNew;
+    }
+
+    public void loadTab(RSS rssSelected) {
+        final Vector<RSSItem> items;
+        try{
+            conn = DriverManager.getConnection("jdbc:sqlite:RSSManager.db");
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT * FROM RSSItem WHERE rssID = '"+rssSelected.getId()+"' AND isRead = "+readStt);
+            items = new Vector<>();
+            while(rs.next()){
+                String itemTitle,itemLink,desc,date,creator;
+                itemTitle = rs.getString("itemTitle");
+                itemLink = rs.getString("itemLink");
+                desc = rs.getString("desc");
+                date = rs.getString("date");
+                creator = rs.getString("creator");
+                RSSItem item = new RSSItem(itemTitle, itemLink, desc, creator, date);
+                item.setItemID(rs.getInt("itemID"));
+                items.add(item);
+            }
+            final String[] columnName = new String[]{"Title", "Date", "Author", "Description"};
+
+
+            final String[][] dataRow = new String[items.size()][4];
+            if (readStt == 0) {
+                for (int i = 0; i < items.size(); i++) {
+                    dataRow[i][0] = "<html><b>&nbsp&nbsp " + items.get(i).getTitle() + "</b></html>";
+                    dataRow[i][1] = "<html><b>&nbsp " + items.get(i).getDate() + "</b></html>";
+                    dataRow[i][2] = "<html><b>&nbsp " + items.get(i).getCreator() + "</b></html>";
+                    dataRow[i][3] = "<html><b>&nbsp " + items.get(i).getDesc() + "</b></html>";
+                }
+            }else{
+                for (int i = 0; i < items.size(); i++) {
+                    dataRow[i][0] = "  "+items.get(i).getTitle();
+                    dataRow[i][1] = "  "+items.get(i).getDate();
+                    dataRow[i][2] = "  "+items.get(i).getCreator();
+                    dataRow[i][3] = "  "+items.get(i).getDesc();
+                }
+            }
+            
+            
+            final DefaultTableModel tableModel = new DefaultTableModel(dataRow, columnName) {
+                @Override
+                public boolean isCellEditable(int rowIndex, int columnIndex) {
+                    return false;
+                }
+                
+            };
+            final JTable table = new JTable(tableModel){
+
+                @Override
+                public JPopupMenu getComponentPopupMenu() {
+                    Point p = getMousePosition();
+                    if(p != null && rowAtPoint(p) >= 0){
+                        if (isRowSelected(rowAtPoint(p))) {
+                            
+                        } else {
+                            this.changeSelection(rowAtPoint(p), columnAtPoint(p), false, false);
+                        }
+                        return super.getComponentPopupMenu();
+                    }else return null;
+                }
+
+            };
+            final JPopupMenu popupMenu = new JPopupMenu();
+            
+            JMenuItem itemView = new JMenuItem("View");
+            itemView.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    MozillaPanel pn = new MozillaPanel(true, IMozillaWindow.VisibilityMode.FORCED_HIDDEN, IMozillaWindow.VisibilityMode.FORCED_HIDDEN);
+                    pn.load(items.get(table.getSelectedRow()).getLink());
+                    pnPreview.add(pn,BorderLayout.CENTER);
+                    pnPreview.revalidate();
+                    int rowIndex = table.getSelectedRow();
+                    table.setValueAt("  "+items.get(rowIndex).getTitle(),rowIndex ,0);
+                    table.setValueAt("  "+items.get(rowIndex).getDate(),rowIndex ,1);
+                    table.setValueAt("  "+items.get(rowIndex).getCreator(),rowIndex ,2);
+                    table.setValueAt("  "+items.get(rowIndex).getDesc(),rowIndex ,3);
+                    try {
+                        conn = DriverManager.getConnection("jdbc:sqlite:RSSManager.db");
+                        stmt = conn.createStatement();
+                        stmt.execute("UPDATE RSSItem set isRead = 1 WHERE itemID = '"+items.get(rowIndex).getItemID()+"'");
+                        model = new DefaultListModel();
+                        formLoad(false);
+                    } catch (SQLException ex) {
+                        System.out.println(ex.getMessage());
+                    } finally{
+                        if(conn != null){
+                            try {
+                                conn.close();
+                            } catch (SQLException ex) {
+                                Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    }
+                }
+            });
+            
+            JMenuItem itemCopyLink = new JMenuItem("Copy link address");
+            itemCopyLink.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+                    StringSelection content = new StringSelection(items.get(table.getSelectedRow()).getLink());
+                    clipboard.setContents(content, null);
+                }
+            });
+            
+            JMenuItem itemViewInbrowser = new JMenuItem("View in browser");
+            itemViewInbrowser.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    try {
+                        URI uri = new URI(items.get(table.getSelectedRow()).getLink());
+                        Desktop desktop = Desktop.getDesktop();
+                        desktop.browse(uri);
+                    } catch (URISyntaxException | IOException ex) {
+                        Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            });
+            
+            itemMarkUnread = new JMenuItem();
+            if(cbbShowFeedType.getSelectedIndex() == 0){
+                itemMarkUnread.setText("Mark read");
+            }else{
+                itemMarkUnread.setText("Mark unread");
+            }
+            itemMarkUnread.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    int index = table.getSelectedRow();
+                    int itemID = items.get(index).getItemID();
+                    int isRead = 1;
+                    if("Mark read".equals(itemMarkUnread.getText())){
+                        isRead = 1;
+                    }else{
+                        isRead = 0;
+                    }
+                    try {
+                        conn = DriverManager.getConnection("jdbc:sqlite:RSSManager.db");
+                        stmt = conn.createStatement();
+                        stmt.executeUpdate("UPDATE RSSItem set isRead = "+isRead+" WHERE itemID = "+itemID);
+                    } catch (SQLException ex) {
+                        Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    tableModel.removeRow(index);
+                    table.setModel(tableModel);
+                    formLoad(false);
+                }
+            });
+            
+            JMenuItem itemDelete = new JMenuItem("Delete");
+            itemDelete.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    int index = table.getSelectedRow();
+                    int itemID = items.get(index).getItemID();
+                    try {
+                        conn = DriverManager.getConnection("jdbc:sqlite:RSSManager.db");
+                        stmt = conn.createStatement();
+                        stmt.executeUpdate("DELETE FROM RSSItem WHERE itemID = "+itemID);
+                    } catch (SQLException ex) {
+                        Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    tableModel.removeRow(index);
+                    table.setModel(tableModel);
+                    formLoad(false);
+                }
+            });
+            
+            popupMenu.add(itemView);
+            popupMenu.add(itemCopyLink);
+            popupMenu.add(itemViewInbrowser);
+            popupMenu.add(itemMarkUnread);
+            popupMenu.add(itemDelete);
+            
+            table.setSelectionBackground(new Color(200, 200, 200));
+            table.setSelectionForeground(Color.BLACK);
+            table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            table.getTableHeader().setReorderingAllowed(false);
+            table.setShowHorizontalLines(false);
+            table.setShowVerticalLines(true);
+            table.setAutoCreateRowSorter(true);
+            table.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            table.setBorder(new EmptyBorder(0, 0, 0, 0));
+//            table.setRowHeight(150);
+            table.setComponentPopupMenu(popupMenu);
+            table.addMouseListener(new MouseAdapter() {
+                
+                @Override
+                public void mouseClicked(MouseEvent evt) {
+                    if (SwingUtilities.isLeftMouseButton(evt)) {
+                        if (table.getSelectedRow() >= 0) {
+                            if(evt.getClickCount() == 2){
+                                pn = new MozillaPanel(true, IMozillaWindow.VisibilityMode.FORCED_HIDDEN, IMozillaWindow.VisibilityMode.FORCED_HIDDEN);
+                                pn.load(items.get(table.getSelectedRow()).getLink());
+                                pnPreview.add(pn,BorderLayout.CENTER);
+                                pnPreview.revalidate();
+                                int rowIndex = table.getSelectedRow();
+                                table.setValueAt("  "+items.get(rowIndex).getTitle(),rowIndex ,0);
+                                table.setValueAt("  "+items.get(rowIndex).getDate(),rowIndex ,1);
+                                table.setValueAt("  "+items.get(rowIndex).getCreator(),rowIndex ,2);
+                                table.setValueAt("  "+items.get(rowIndex).getDesc(),rowIndex ,3);
+                                try {
+                                    conn = DriverManager.getConnection("jdbc:sqlite:RSSManager.db");
+                                    stmt = conn.createStatement();
+                                    stmt.execute("UPDATE RSSItem set isRead = 1 WHERE itemID = '"+items.get(rowIndex).getItemID()+"'");
+                                    model = new DefaultListModel();
+                                    formLoad(false);
+                                } catch (SQLException ex) {
+                                    System.out.println(ex.getMessage());
+                                } finally{
+                                    if(conn != null){
+                                        try {
+                                            conn.close();
+                                        } catch (SQLException ex) {
+                                            Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+                                        }
+                                    }
+                                }
+                            }
+                            
+                        }
+                        
+                    }
+                }
+                
+            });
+            table.addKeyListener(new KeyAdapter() {
+                @Override
+                public void keyPressed(KeyEvent evt){
+                    if(evt.getKeyCode() == KeyEvent.VK_DELETE){
+                        int index = table.getSelectedRow();
+                        if(index >= 0){
+                            try {
+                                conn = DriverManager.getConnection("jdbc:sqlite:RSSManager.db");
+                                stmt = conn.createStatement();
+                                stmt.executeUpdate("DELETE FROM RSSItem WHERE itemID = '"+items.get(index).getItemID()+"'");
+                            } catch (SQLException ex) {
+                                Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+                            } finally{
+                                if(conn != null){
+                                    try {
+                                        conn.close();
+                                    } catch (SQLException ex) {
+                                        Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+                                    }
+                                }
+                            }
+                            items.remove(index);
+                            DefaultTableModel newTableModel = (DefaultTableModel)table.getModel();
+                            newTableModel.removeRow(index);
+                            table.setModel(newTableModel);
+                            formLoad(false);
+                        }
+                    }
+                }
+            });
+            
+            JScrollPane scrPane = new JScrollPane(table);
+
+            Icon icon = new ImageIcon("src\\icon\\rss_feed.png");
+            tabbedPane.addTab(rssSelected.getTitle(),icon, scrPane, rssSelected.getNewsLink());
+            tabbedPane.setSelectedComponent(scrPane);
+        }catch(SQLException ex){
+            System.out.println(ex.getMessage());
+        }
+        
+
+
+        
+        
+    }
+
+    private void formLoad(boolean firsTime) {
+        try{
+            setBtnRemoveAndUpdate(false);
+            conn = DriverManager.getConnection("jdbc:sqlite:RSSManager.db");
+            stmt = conn.createStatement();
+            rs = stmt.executeQuery("SELECT * FROM RSS");
+            model = new DefaultListModel();
+            while(rs.next()){
+                Statement statement = conn.createStatement();
+                RSS rssFeed = new RSS();
+                rssFeed.setTitle(rs.getString("title"));
+                rssFeed.setNewsLink(rs.getString("link"));
+                rssFeed.setRssLink(rs.getString("rssLink"));
+                int rssId = rs.getInt("id");
+                rssFeed.setId(rssId);
+                ResultSet rset = statement.executeQuery("SELECT count(*) FROM RSSItem WHERE rssID = '"+rssId+"' AND isRead = "+readStt);
+                if(rset.next()){
+                    rssFeed.setItemCount(rset.getInt("count(*)"));
+                }
+                if(firsTime)
+                    rssCollection.add(rssFeed);
+                model.addElement("<html><img src=\"file:///"+iconFile.getAbsolutePath()+"\"><b>&nbsp&nbsp&nbsp&nbsp "+rssFeed.getTitle()+" ("+rssFeed.getItemCount()+")"+"</b></html>");
+                
+            }
+            if(model.getSize() > 0){
+                btnExport.setEnabled(true);
+                miExport.setEnabled(true);
+            }
+            rssList.setModel(model);
+        } catch (SQLException ex) {
+        Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+        } finally{
+            try {
+                conn.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+    }
+
+    private void creatTrayIcon() {
+        ImageIcon icon = new ImageIcon("src\\icon\\rss_feed.png");
+        final JPopupMenu trayMenu = new JPopupMenu();
+        setIconImage(icon.getImage());
+        trayIcon = new TrayIcon(icon.getImage(),"New Feed", null);
+        trayIcon.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent evt){
+                if(evt.isPopupTrigger()){
+                    trayMenu.setLocation(evt.getX(), evt.getY()-trayMenu.getHeight());
+                    trayMenu.setInvoker(trayMenu);
+                    trayMenu.setVisible(true);
+                }
+            }
+        });
+        trayIcon.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                tray.remove(trayIcon);
+                setVisible(true);
+                setState(NORMAL);
+                setTimer(false);
+                trayIcon.setImage(new ImageIcon("src\\icon\\rss_feed.png").getImage());
+                
+            }
+        });
+        if(SystemTray.isSupported()){
+            tray = SystemTray.getSystemTray();
+            
+            
+            JMenuItem showItem = new JMenuItem("Show");
+            showItem.addActionListener(new ActionListener() {
+                
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    tray.remove(trayIcon);
+                    setVisible(true);
+                    setState(NORMAL);
+                    setTimer(false);
+                }
+            });
+            
+            JMenuItem showNewFeedItem = new JMenuItem("Show new feed");
+            showNewFeedItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    setTimer(false);
+                    ShowNewFeed dialog = new ShowNewFeed(feedNews);
+                    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                    dialog.setSize(500, 150);
+                    dialog.setLocation((screenSize.width-500)/2, (screenSize.height-150)/3);
+                    dialog.setVisible(true);
+                }
+            });
+            
+            JMenuItem updateItem = new JMenuItem("Update now");
+            updateItem.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    for (int i = 0; i < rssCollection.size(); i++) {
+                        if(i >= 0)
+                            updateRssFeed(i);
+                    }
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            setTimer(false);
+                            ShowNewFeed dialog = new ShowNewFeed(feedNews);
+                            Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+                            dialog.setSize(500, 150);
+                            dialog.setLocation((screenSize.width-500)/2, (screenSize.height-150)/3);
+                            dialog.setVisible(true);
+                        }
+                    }).start();
+                }
+            });
+            
+            JMenuItem exitItem = new JMenuItem("Exit");
+            exitItem.addActionListener(new ActionListener() {
+
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    System.exit(0);
+                }
+            });
+            
+            trayMenu.add(showItem);
+            trayMenu.add(showNewFeedItem);
+            trayMenu.add(updateItem);
+            trayMenu.add(exitItem);
+            
+            
+            
+        }
+        addWindowStateListener(new WindowStateListener() {
+            @Override
+            public void windowStateChanged(WindowEvent e) {
+                if(e.getNewState() == ICONIFIED || e.getNewState() == 7){
+                    try {
+                        tray.add(trayIcon);
+                        setVisible(false);
+                    } catch (AWTException ex) {
+                        Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+                
+            }
+        });
+        
+    }
+    
+    public void importFromOpml() throws SQLException{
+        String path = System.getenv("USERPROFILE")+"\\Desktop";
+        JFileChooser chooser = new JFileChooser(path);
+        chooser.setFileFilter(new FileNameExtensionFilter("Outline Processor Markup Language (*.opml)", "opml"));
+        if(chooser.showSaveDialog(this) == JFileChooser.OPEN_DIALOG && chooser.getSelectedFile() != null){
+            File file = chooser.getSelectedFile();
+            OPMLReaderWriter reader = new OPMLReaderWriter();
+            Vector<RSS> rsses = reader.OpmlReader(file.getAbsolutePath());
+            for (RSS rss1 : rsses) {
+                rssCollection.add(rss1);
+            }
+            formLoad(false);
+        }
+    }
+
+    private void exportToOpmlFile() {
+        try {
+            System.out.println("writing...");
+            OPMLReaderWriter writer = new OPMLReaderWriter();
+            writer.setText(JOptionPane.showInputDialog("Feeds Name: "));
+            writer.OpmlWriter(rssCollection, this);
+        } catch (FileNotFoundException | UnsupportedEncodingException ex) {
+            Logger.getLogger(RSSManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+}
